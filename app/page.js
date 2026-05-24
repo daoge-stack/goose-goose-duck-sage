@@ -53,7 +53,7 @@ export default function Home() {
 
     try {
       const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 25000)
+      const timeoutId = setTimeout(() => controller.abort('timeout'), 55000)
 
       const res = await fetch('/api/analyze', {
         method: 'POST',
@@ -66,7 +66,11 @@ export default function Home() {
       if (!res.ok) throw new Error(data.error || '分析失败')
       setResult(data)
     } catch (err) {
-      setError(err.message)
+      if (err.name === 'AbortError') {
+        setError('分析超时，请检查截图是否清晰或换一张试试')
+      } else {
+        setError(err.message)
+      }
     } finally {
       setLoading(false)
     }
