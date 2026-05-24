@@ -63,6 +63,10 @@ export async function POST(req) {
       input: {
         messages: [
           {
+            role: 'system',
+            content: [{ text: SYSTEM_PROMPT }],
+          },
+          {
             role: 'user',
             content: [
               { image: image },
@@ -104,9 +108,17 @@ export async function POST(req) {
     }
 
     // 提取 JSON（AI 可能用 ```json 包裹）
-    const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/) || content.match(/{[\s\S]*}/)
-    const jsonStr = jsonMatch ? jsonMatch[1] || jsonMatch[0] : content
-    const parsed = JSON.parse(jsonStr)
+    let parsed
+    try {
+      const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/) || content.match(/{[\s\S]*}/)
+      const jsonStr = jsonMatch ? jsonMatch[1] || jsonMatch[0] : content
+      parsed = JSON.parse(jsonStr)
+    } catch {
+      return Response.json({
+        error: 'AI 返回格式异常，请重试。如果问题持续，换一张清晰截图。',
+        raw: content.slice(0, 200),
+      }, { status: 502 })
+    }
 
     // 验证返回结构
     if (!parsed.players && !parsed.roasts && !parsed.praises) {
