@@ -51,11 +51,13 @@ export async function POST(req) {
       return Response.json({ error: '图片太大，请压缩后上传（最大 10MB）' }, { status: 400 })
     }
 
-    // 构建分析指令
-    let userPrompt = '分析这张鹅鸭杀游戏结算截图'
-    if (targetPlayer) {
-      userPrompt = `重点关注玩家"${targetPlayer}"的表现，专门分析 TA 有多坑或者多强，生成针对 TA 的嘴替文案。其他玩家正常分析即可。`
-    }
+    // 构建完整分析指令（qwen-vl-plus 不支持 system role，全放 user message 里）
+    const fullPrompt = (targetPlayer
+      ? `重点关注玩家"${targetPlayer}"的表现，专门分析 TA 有多坑或者多强，生成针对 TA 的嘴替文案。其他玩家正常分析即可。`
+      : '分析这张鹅鸭杀游戏结算截图'
+    ) + `
+
+${SYSTEM_PROMPT}`
 
     // 调用 DashScope 多模态 API
     const body = {
@@ -63,14 +65,10 @@ export async function POST(req) {
       input: {
         messages: [
           {
-            role: 'system',
-            content: [{ text: SYSTEM_PROMPT }],
-          },
-          {
             role: 'user',
             content: [
               { image: image },
-              { text: userPrompt },
+              { text: fullPrompt },
             ],
           },
         ],
