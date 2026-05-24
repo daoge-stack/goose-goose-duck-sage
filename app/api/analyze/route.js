@@ -1,3 +1,5 @@
+export const runtime = 'edge'  // Edge Runtime: 30秒超时，比默认10秒多3倍
+
 const DASHSCOPE_API_KEY = process.env.DASHSCOPE_API_KEY
 const DASHSCOPE_URL = 'https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation'
 
@@ -57,7 +59,7 @@ export async function POST(req) {
 
     // 调用 DashScope 多模态 API
     const body = {
-      model: 'qwen-vl-max',
+      model: 'qwen-vl-plus',  // plus 比 max 更快更便宜，分析截图够用
       input: {
         messages: [
           {

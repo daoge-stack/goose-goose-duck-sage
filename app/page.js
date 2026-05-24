@@ -19,14 +19,14 @@ export default function Home() {
 
     const reader = new FileReader()
     reader.onload = async (e) => {
-      const compressed = await compressImage(e.target.result, 1200)
+      const compressed = await compressImage(e.target.result, 800)
       setImage(compressed)
       setPreview(URL.createObjectURL(file))
     }
     reader.readAsDataURL(file)
   }
 
-  // 压缩图片：最大宽度 1200px，JPEG 80% 质量
+  // 压缩图片：最大宽度 800px，JPEG 70% 质量（AI 分析够用就行）
   function compressImage(dataUrl, maxWidth) {
     return new Promise((resolve) => {
       const img = new Image()
@@ -38,7 +38,7 @@ export default function Home() {
         canvas.width = w
         canvas.height = h
         canvas.getContext('2d').drawImage(img, 0, 0, w, h)
-        resolve(canvas.toDataURL('image/jpeg', 0.8))
+        resolve(canvas.toDataURL('image/jpeg', 0.7))
       }
       img.src = dataUrl
     })
