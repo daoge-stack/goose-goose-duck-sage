@@ -18,12 +18,30 @@ export default function Home() {
     setResult(null)
 
     const reader = new FileReader()
-    reader.onload = (e) => {
-      const dataUrl = e.target.result
-      setImage(dataUrl)
-      setPreview(dataUrl)
+    reader.onload = async (e) => {
+      const compressed = await compressImage(e.target.result, 1200)
+      setImage(compressed)
+      setPreview(URL.createObjectURL(file))
     }
     reader.readAsDataURL(file)
+  }
+
+  // 压缩图片：最大宽度 1200px，JPEG 80% 质量
+  function compressImage(dataUrl, maxWidth) {
+    return new Promise((resolve) => {
+      const img = new Image()
+      img.onload = () => {
+        const scale = Math.min(1, maxWidth / img.width)
+        const w = img.width * scale
+        const h = img.height * scale
+        const canvas = document.createElement('canvas')
+        canvas.width = w
+        canvas.height = h
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h)
+        resolve(canvas.toDataURL('image/jpeg', 0.8))
+      }
+      img.src = dataUrl
+    })
   }
 
   async function handleAnalyze(target) {
@@ -34,11 +52,16 @@ export default function Home() {
     setResult(null)
 
     try {
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 25000)
+
       const res = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ image, targetPlayer: name }),
+        signal: controller.signal,
       })
+      clearTimeout(timeoutId)
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || '分析失败')
       setResult(data)
