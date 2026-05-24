@@ -9,6 +9,7 @@ export default function Home() {
   const [result, setResult] = useState(null)
   const [error, setError] = useState(null)
   const [copiedIndex, setCopiedIndex] = useState(null)
+  const [targetPlayer, setTargetPlayer] = useState('')
   const inputRef = useRef()
 
   function handleFile(file) {
@@ -25,8 +26,9 @@ export default function Home() {
     reader.readAsDataURL(file)
   }
 
-  async function handleAnalyze() {
+  async function handleAnalyze(target) {
     if (!image) return
+    const name = target || targetPlayer
     setLoading(true)
     setError(null)
     setResult(null)
@@ -35,7 +37,7 @@ export default function Home() {
       const res = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image }),
+        body: JSON.stringify({ image, targetPlayer: name }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || '分析失败')
@@ -88,14 +90,27 @@ export default function Home() {
         />
       </div>
 
+      {/* Target player input */}
+      {image && (
+        <div className="mt-4">
+          <input
+            type="text"
+            placeholder="指定要嘴替的玩家（留空则全场随机）"
+            value={targetPlayer}
+            onChange={(e) => setTargetPlayer(e.target.value)}
+            className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-600 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-yellow-500 transition-colors"
+          />
+        </div>
+      )}
+
       {/* Analyze button */}
       {image && (
         <button
-          onClick={handleAnalyze}
+          onClick={() => handleAnalyze()}
           disabled={loading}
-          className="mt-6 w-full py-3 px-6 bg-gradient-to-r from-yellow-500 to-red-500 text-white font-bold rounded-xl text-lg hover:opacity-90 disabled:opacity-50 transition-all"
+          className="mt-4 w-full py-3 px-6 bg-gradient-to-r from-yellow-500 to-red-500 text-white font-bold rounded-xl text-lg hover:opacity-90 disabled:opacity-50 transition-all"
         >
-          {loading ? '🤔 分析中...' : '🔥 开始嘴替'}
+          {loading ? '🤔 分析中...' : targetPlayer ? `🎯 嘴替 ${targetPlayer}` : '🔥 开始嘴替'}
         </button>
       )}
 
@@ -135,6 +150,13 @@ export default function Home() {
                       </div>
                       <p className="text-sm text-slate-400 mt-0.5">{p.comment}</p>
                     </div>
+                    <button
+                      onClick={() => handleAnalyze(p.name)}
+                      className="shrink-0 text-xs px-2 py-1 rounded bg-slate-600 hover:bg-yellow-600 transition-colors"
+                      title={`专门嘴替 ${p.name}`}
+                    >
+                      🎯 针对 TA
+                    </button>
                   </div>
                 ))}
               </div>

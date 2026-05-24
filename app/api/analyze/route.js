@@ -38,7 +38,7 @@ export async function POST(req) {
       )
     }
 
-    const { image } = await req.json()
+    const { image, targetPlayer } = await req.json()
     if (!image) {
       return Response.json({ error: '请上传截图' }, { status: 400 })
     }
@@ -47,6 +47,12 @@ export async function POST(req) {
     const sizeInBytes = (image.length * 3) / 4
     if (sizeInBytes > 10 * 1024 * 1024) {
       return Response.json({ error: '图片太大，请压缩后上传（最大 10MB）' }, { status: 400 })
+    }
+
+    // 构建分析指令
+    let userPrompt = '分析这张鹅鸭杀游戏结算截图'
+    if (targetPlayer) {
+      userPrompt = `重点关注玩家"${targetPlayer}"的表现，专门分析 TA 有多坑或者多强，生成针对 TA 的嘴替文案。其他玩家正常分析即可。`
     }
 
     // 调用 DashScope 多模态 API
@@ -58,7 +64,7 @@ export async function POST(req) {
             role: 'user',
             content: [
               { image: image },
-              { text: '分析这张鹅鸭杀游戏结算截图' },
+              { text: userPrompt },
             ],
           },
         ],
