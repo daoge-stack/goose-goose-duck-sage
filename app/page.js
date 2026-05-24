@@ -63,13 +63,17 @@ export default function Home() {
       })
       clearTimeout(timeoutId)
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || '分析失败')
+      if (!res.ok) {
+        const err = new Error(data.error || '分析失败')
+        err.raw = data.raw
+        throw err
+      }
       setResult(data)
     } catch (err) {
       if (err.name === 'AbortError') {
         setError('分析超时，请检查截图是否清晰或换一张试试')
       } else {
-        setError(err.message)
+        setError(err.raw ? `${err.message}\n\nAI 原始返回:\n${err.raw}` : err.message)
       }
     } finally {
       setLoading(false)
